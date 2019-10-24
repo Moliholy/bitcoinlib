@@ -24,7 +24,7 @@ except ImportError:
     import enum34 as enum
 import datetime
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, UniqueConstraint, CheckConstraint, String, Boolean, Sequence, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, BigInteger, UniqueConstraint, CheckConstraint, String, Boolean, Sequence, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -42,15 +42,15 @@ class DbInit:
     Import data if database did not exist yet
 
     """
-    def __init__(self, databasefile=DEFAULT_DATABASE):
-        if not os.path.isabs(databasefile):
-            databasefile = os.path.join(BCL_DATABASE_DIR, databasefile)
-        self.engine = create_engine('sqlite:///%s' % databasefile)
+    def __init__(self, db_uri=None):
+        if db_uri is None:
+            sqlite_file = os.path.join(BCL_DATABASE_DIR, DEFAULT_DATABASE)
+            db_uri = 'sqlite:///%s' % sqlite_file
+        self.engine = create_engine(db_uri)
         Session = sessionmaker(bind=self.engine)
 
-        if not os.path.exists(databasefile):
-            Base.metadata.create_all(self.engine)
-            self._import_config_data(Session)
+        Base.metadata.create_all(self.engine)
+        self._import_config_data(Session)
 
         self.session = Session()
 
@@ -76,14 +76,14 @@ class DbInit:
     @staticmethod
     def _import_config_data(ses):
         session = ses()
-        session.add(DbConfig(variable='version', value=BITCOINLIB_VERSION))
-        session.add(DbConfig(variable='installation_date', value=str(datetime.datetime.now())))
+        session.merge(DbConfig(variable='version', value=BITCOINLIB_VERSION))
+        session.merge(DbConfig(variable='installation_date', value=str(datetime.datetime.now())))
         url = ''
         try:
             url = str(session.bind.url)
         except:
             pass
-        session.add(DbConfig(variable='installation_url', value=url))
+        session.merge(DbConfig(variable='installation_url', value=url))
         session.commit()
         session.close()
 
@@ -106,9 +106,9 @@ class DbConfig(Base):
 class DbWallet(Base):
     """
     Database definitions for wallets in Sqlalchemy format
-    
+
     Contains one or more keys.
-     
+
     """
     __tablename__ = 'wallets'
     id = Column(Integer, Sequence('wallet_id_seq'), primary_key=True)
@@ -160,7 +160,7 @@ class DbKeyMultisigChildren(Base):
 class DbKey(Base):
     """
     Database definitions for keys in Sqlalchemy format
-    
+
     Part of a wallet, and used by transactions
 
     """
@@ -171,7 +171,7 @@ class DbKey(Base):
     account_id = Column(Integer, index=True)
     depth = Column(Integer)
     change = Column(Integer)
-    address_index = Column(Integer)
+    address_index = Column(BigInteger)
     public = Column(String(255), index=True)
     private = Column(String(255), index=True)
     wif = Column(String(255), index=True)
@@ -235,9 +235,9 @@ class TransactionType(enum.Enum):
 class DbTransaction(Base):
     """
     Database definitions for transactions in Sqlalchemy format
-    
+
     Refers to 1 or more keys which can be part of a wallet
-    
+
     """
     __tablename__ = 'transactions'
     id = Column(Integer, Sequence('transaction_id_seq'), primary_key=True)

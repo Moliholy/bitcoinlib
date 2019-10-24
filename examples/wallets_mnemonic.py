@@ -8,7 +8,6 @@
 #
 
 import os
-from pprint import pprint
 from bitcoinlib.wallets import HDWallet, BCL_DATABASE_DIR
 from bitcoinlib.mnemonic import Mnemonic
 try:
@@ -22,7 +21,7 @@ except NameError:
 
 # First recreate database to avoid already exist errors
 test_databasefile = 'bitcoinlib.test.sqlite'
-test_database = BCL_DATABASE_DIR + test_databasefile
+test_database = 'sqlite:///' + BCL_DATABASE_DIR + test_databasefile
 if os.path.isfile(test_database):
     os.remove(test_database)
 
@@ -31,7 +30,7 @@ passphrase = Mnemonic().generate()
 print("Your private key passphrase is:", passphrase)
 password = input("Enter password to protect passphrase: ")
 wlt = HDWallet.create('mnwlttest1', keys=passphrase, password=password, network='bitcoinlib_test',
-                      databasefile=test_database)
+                      db_uri=test_database)
 wlt.get_key()
 wlt.utxos_update()  # Create some test UTXOs
 wlt.info()
