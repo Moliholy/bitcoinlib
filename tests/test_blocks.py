@@ -17,10 +17,13 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-import unittest
+import os
 import pickle
-from bitcoinlib.blocks import *
+import unittest
+
+from bitcoinlib.blocks import Block
+from bitcoinlib.config.config import PY3
+from bitcoinlib.encoding import to_bytes, to_hexstring
 from tests.test_custom import CustomAssertions
 
 

@@ -17,9 +17,18 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import json
+import os
+import random
 import unittest
 from random import shuffle
+
+from bitcoinlib.config.config import BCL_DATABASE_DIR, PY3, UNITTESTS_FULL_DATABASE_TEST
+from bitcoinlib.transactions import Input, Output, Transaction
+from bitcoinlib.wallets import (HDWallet, HDWalletKey, HDWalletTransaction, WalletError, normalize_path,
+                                wallet_create_or_open, wallet_delete, wallet_delete_if_exists, wallet_empty,
+                                wallet_exists, wallets_list)
+
 try:
     import mysql.connector
     from parameterized import parameterized_class
@@ -32,10 +41,9 @@ except ImportError as e:
     # compat.register()
     pass  # Only necessary when mysql or postgres is used
 from sqlalchemy.orm import close_all_sessions
-from bitcoinlib.wallets import *
-from bitcoinlib.encoding import USE_FASTECDSA
+from bitcoinlib.encoding import USE_FASTECDSA, to_hexstring
 from bitcoinlib.mnemonic import Mnemonic
-from bitcoinlib.keys import HDKey, BKeyError
+from bitcoinlib.keys import Address, HDKey, BKeyError
 from tests.test_custom import CustomAssertions
 
 

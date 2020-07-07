@@ -21,11 +21,13 @@
 import math
 import logging
 from datetime import datetime
+
+from bitcoinlib.config.config import MAX_TRANSACTIONS
+
 try:
     from datetime import timezone
 except Exception:
     pass
-from bitcoinlib.main import MAX_TRANSACTIONS
 from bitcoinlib.services.baseclient import BaseClient, ClientError
 from bitcoinlib.transactions import Transaction
 from bitcoinlib.keys import deserialize_address, Address

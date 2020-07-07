@@ -21,8 +21,11 @@
 import functools
 import logging
 from logging.handlers import RotatingFileHandler
-from bitcoinlib.config.config import *
 
+from bitcoinlib.config.config import (BCL_CONFIG_FILE, BCL_DATABASE_DIR, BCL_DATA_DIR, BCL_LOG_FILE,
+                                      BITCOINLIB_VERSION,
+                                      DEFAULT_DATABASE, ENABLE_BITCOINLIB_LOGGING,
+                                      LOGLEVEL)
 
 # Initialize logging
 logger = logging.getLogger()

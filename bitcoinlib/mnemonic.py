@@ -19,16 +19,19 @@
 #
 
 import hashlib
-from bitcoinlib.encoding import change_base, normalize_string, to_bytes
+import os
+import sys
+
+from bitcoinlib.config.config import BCL_INSTALL_DIR, DEFAULT_LANGUAGE, TYPE_TEXT
 from bitcoinlib.config.secp256k1 import secp256k1_n
-from bitcoinlib.main import *
+from bitcoinlib.encoding import change_base, normalize_string, to_bytes
 
 
 class Mnemonic(object):
     """
     Class to convert, generate and parse Mnemonic sentences
-    
-    Implementation of BIP0039 for Mnemonics passphrases 
+
+    Implementation of BIP0039 for Mnemonics passphrases
 
     Took some parts from Pavol Rusnak Trezors implementation, see https://github.com/trezor/python-mnemonic
     """
@@ -36,10 +39,10 @@ class Mnemonic(object):
     def __init__(self, language=DEFAULT_LANGUAGE):
         """
         Init Mnemonic class and read wordlist of specified language
-        
+
         :param language: use specific wordlist, i.e. chinese, dutch (in development), english, french, italian, japanese or spanish. Leave empty for default 'english'
         :type language: str
-        
+
         """
         self._wordlist = []
         with open(os.path.join(str(BCL_INSTALL_DIR), 'wordlist', '%s.txt' % language)) as f:
@@ -55,7 +58,7 @@ class Mnemonic(object):
 
         :param data: key string
         :type data: bytes, hexstring
-        
+
         :return str: Checksum of key in bits
         """
         data = to_bytes(data)
@@ -68,7 +71,7 @@ class Mnemonic(object):
     def to_seed(self, words, password='', validate=True):
         """
         Use Mnemonic words and optionally a password to create a PBKDF2 seed (Password-Based Key Derivation Function 2)
-        
+
         First use 'sanitize_mnemonic' to determine language and validate and check words
 
         >>> from bitcoinlib.encoding import to_hexstring
@@ -81,7 +84,7 @@ class Mnemonic(object):
         :type password: str
         :param validate: Validate checksum for given word phrase, default is True
         :type validate: bool
-        
+
         :return bytes: PBKDF2 seed
         """
         words = self.sanitize_mnemonic(words)
@@ -96,26 +99,26 @@ class Mnemonic(object):
     def word(self, index):
         """
         Get word from wordlist
-        
+
         :param index: word index ID
         :type index: int
-        
-        :return str: A word from the dictionary 
+
+        :return str: A word from the dictionary
         """
         return self._wordlist[index]
 
     def wordlist(self):
         """
         Get full selected wordlist. A wordlist is selected when initializing Mnemonic class
-        
-        :return list: Full list with 2048 words 
+
+        :return list: Full list with 2048 words
         """
         return self._wordlist
 
     def generate(self, strength=128, add_checksum=True):
         """
         Generate a random Mnemonic key
-        
+
         Uses cryptographically secure os.urandom() function to generate data. Then creates a Mnemonic sentence with
         the 'to_mnemonic' method.
 
@@ -123,7 +126,7 @@ class Mnemonic(object):
         :type strength: int
         :param add_checksum: Included a checksum? Default is True
         :type add_checksum: bool
-        
+
         :return str: Mnemonic passphrase consisting of a space seperated list of words
         """
         if strength % 32 > 0:
@@ -144,7 +147,7 @@ class Mnemonic(object):
         :type add_checksum: bool
         :param check_on_curve: Check if data integer value is on secp256k1 curve. Should be enabled when not testing and working with crypto
         :type check_on_curve: bool
-        
+
         :return str: Mnemonic passphrase consisting of a space seperated list of words
         """
         data = to_bytes(data)
@@ -171,7 +174,7 @@ class Mnemonic(object):
         :type words: str
         :param includes_checksum: Boolean to specify if checksum is used. Default is True
         :type includes_checksum: bool
-        
+
         :return bytes: Entropy seed
         """
         words = self.sanitize_mnemonic(words)
@@ -199,11 +202,11 @@ class Mnemonic(object):
 
         >>> Mnemonic().detect_language('chunk gun celery million wood kite tackle twenty story episode raccoon dutch')
         'english'
-        
+
         :param words: List of space separated words
         :type words: str
-        
-        :return str: Language 
+
+        :return str: Language
         """
         words = normalize_string(words)
         if isinstance(words, TYPE_TEXT):
@@ -231,12 +234,12 @@ class Mnemonic(object):
     def sanitize_mnemonic(self, words):
         """
         Check and convert list of words to utf-8 encoding.
-        
+
         Raises an error if unrecognised word is found
-        
+
         :param words: List of space separated words
         :type words: str
-        
+
         :return str: Sanitized list of words
         """
         words = normalize_string(words)

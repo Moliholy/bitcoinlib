@@ -8,9 +8,11 @@
 #
 
 import os
-from bitcoinlib.wallets import *
-from bitcoinlib.mnemonic import Mnemonic
 
+from bitcoinlib.config.config import BCL_DATABASE_DIR
+from bitcoinlib.keys import HDKey
+from bitcoinlib.mnemonic import Mnemonic
+from bitcoinlib.wallets import HDWallet, WalletError, normalize_path, wallet_delete, wallets_list
 
 #
 # Create Wallets

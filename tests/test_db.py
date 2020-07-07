@@ -17,11 +17,12 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import os
 import unittest
-from tests.db_0_4_10 import DbInit as DbInitOld
-from bitcoinlib.db import *
 
+from bitcoinlib.config.config import BCL_DATABASE_DIR
+from bitcoinlib.db import DbConfig
+from tests.db_0_4_10 import DbInit as DbInitOld
 
 DATABASEFILE_UNITTESTS = os.path.join(str(BCL_DATABASE_DIR), 'bitcoinlib.unittest.sqlite')
 

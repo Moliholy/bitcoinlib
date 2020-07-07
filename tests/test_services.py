@@ -17,10 +17,14 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import os
 import unittest
 from datetime import datetime
-from bitcoinlib.services.services import *
+
+from bitcoinlib.config.config import BCL_DATABASE_DIR, DEFAULT_NETWORK
+from bitcoinlib.encoding import to_hexstring
+from bitcoinlib.networks import Network
+from bitcoinlib.services.services import Service, ServiceError
 from tests.test_custom import CustomAssertions
 
 MAXIMUM_ESTIMATED_FEE_DIFFERENCE = 3.00  # Maximum difference from average estimated fee before test_estimatefee fails.

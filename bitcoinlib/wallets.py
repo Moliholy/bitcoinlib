@@ -18,22 +18,29 @@
 #
 
 import json
+import logging
 import numbers
 import random
+import struct
 import warnings
+from datetime import datetime
 from itertools import groupby
 from operator import itemgetter
-import struct
 
-from bitcoinlib.db import *
+from sqlalchemy import func, or_
+
+from bitcoinlib.config.config import (DEFAULT_NETWORK, DEFAULT_WITNESS_TYPE, MAX_TRANSACTIONS, SIGHASH_ALL, TYPE_INT,
+                                      WALLET_KEY_STRUCTURES)
+from bitcoinlib.db import (DbInit, DbKey, DbKeyMultisigChildren, DbNetwork, DbTransaction, DbTransactionInput,
+                           DbTransactionOutput, DbWallet)
 from bitcoinlib.encoding import EncodingError, to_bytes, to_hexstring
 from bitcoinlib.keys import Address, BKeyError, HDKey, check_network_and_key, path_expand
+from bitcoinlib.main import deprecated, get_encoding_from_witness, script_type_default
 from bitcoinlib.mnemonic import Mnemonic
 from bitcoinlib.networks import Network
 from bitcoinlib.services.services import Service
 from bitcoinlib.transactions import (Input, Output, Transaction, get_unlocking_script_type,
                                      serialize_multisig_redeemscript)
-from sqlalchemy import func, or_
 
 _logger = logging.getLogger(__name__)
 
@@ -1787,7 +1794,7 @@ class HDWallet(object):
                     _logger.info("Possible recursive loop detected in scan_key(%d): retry %d/5" %
                                  (key.key_id, should_be_finished_count))
                 should_be_finished_count += 1
-            logger.info("Scanned key %d, %s Found %d new transactions" % (key.key_id, key.address, n_new))
+            _logger.info("Scanned key %d, %s Found %d new transactions" % (key.key_id, key.address, n_new))
             if not n_new or should_be_finished_count > 5:
                 break
             txs_found = True

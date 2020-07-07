@@ -18,14 +18,17 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import logging
 import struct
-from bitcoinlib.main import *
+from datetime import datetime
+from pathlib import Path
+
+from bitcoinlib.config.config import BCL_DATA_DIR, MAX_TRANSACTIONS
+from bitcoinlib.encoding import to_hexstring
+from bitcoinlib.networks import Network
 from bitcoinlib.services.authproxy import AuthServiceProxy
 from bitcoinlib.services.baseclient import BaseClient, ClientError
 from bitcoinlib.transactions import Transaction
-from bitcoinlib.encoding import to_hexstring
-from bitcoinlib.networks import Network
-
 
 PROVIDERNAME = 'bitcoind'
 

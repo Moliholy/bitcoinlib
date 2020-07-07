@@ -17,12 +17,14 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from datetime import datetime
 
-from bitcoinlib.main import *
+from bitcoinlib.config.config import MAX_TRANSACTIONS
+
 from bitcoinlib.services.baseclient import BaseClient, ClientError
 from bitcoinlib.transactions import Transaction, transaction_update_spents
 from bitcoinlib.encoding import to_hexstring
-
+import logging
 
 PROVIDERNAME = 'bcoin'
 

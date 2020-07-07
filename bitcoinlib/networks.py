@@ -18,12 +18,15 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import json
 import binascii
+import json
+import logging
 import math
-from bitcoinlib.main import *
-from bitcoinlib.encoding import to_hexstring, change_base, to_bytes
+from pathlib import Path
 
+from bitcoinlib.config.config import BCL_DATA_DIR, DEFAULT_NETWORK
+from bitcoinlib.encoding import change_base, to_bytes, to_hexstring
+from bitcoinlib.main import script_type_default
 
 _logger = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ def network_values_for(field):
     :param field: Prefix name from networks definitions (networks.json)
     :type field: str
 
-    :return str: 
+    :return str:
     """
     return [_format_value(field, nv[field]) for nv in NETWORK_DEFINITIONS.values()]
 
@@ -90,7 +93,7 @@ def network_values_for(field):
 def network_by_value(field, value):
     """
     Return all networks for field and (prefix) value.
-    
+
     Example, get available networks for WIF or address prefix
 
     >>> network_by_value('prefix_wif', 'B0')
@@ -102,13 +105,13 @@ def network_by_value(field, value):
 
     >>> network_by_value('prefix_address', '043587CF')
     []
-    
+
     :param field: Prefix name from networks definitions (networks.json)
     :type field: str
     :param value: Value of network prefix
     :type value: str, bytes
 
-    :return list: Of network name strings 
+    :return list: Of network name strings
     """
     nws = [(nv, NETWORK_DEFINITIONS[nv]['priority'])
            for nv in NETWORK_DEFINITIONS if NETWORK_DEFINITIONS[nv][field] == value]
@@ -125,18 +128,18 @@ def network_by_value(field, value):
 def network_defined(network):
     """
     Is network defined?
-    
+
     Networks of this library are defined in networks.json in the operating systems user path.
 
     >>> network_defined('bitcoin')
     True
     >>> network_defined('ethereum')
     False
-    
+
     :param network: Network name
     :type network: str
-    
-    :return bool: 
+
+    :return bool:
     """
     if network not in list(NETWORK_DEFINITIONS.keys()):
         return False
@@ -207,11 +210,11 @@ def wif_prefix_search(wif, witness_type=None, multisig=None, network=None):
 
 class Network(object):
     """
-    Network class with all network definitions. 
-    
-    Prefixes for WIF, P2SH keys, HD public and private keys, addresses. A currency symbol and type, the 
+    Network class with all network definitions.
+
+    Prefixes for WIF, P2SH keys, HD public and private keys, addresses. A currency symbol and type, the
     denominator (such as satoshi) and a BIP0044 cointype.
-    
+
     """
 
     def __init__(self, network_name=DEFAULT_NETWORK):
@@ -261,8 +264,8 @@ class Network(object):
 
         :param value: Value in smallest denominitor such as Satoshi
         :type value: int, float
-        
-        :return str: 
+
+        :return str:
         """
         symb = self.currency_code
         denominator = self.denominator

@@ -17,10 +17,13 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import struct
 
-from bitcoinlib.encoding import *
+from bitcoinlib.config.config import DEFAULT_NETWORK, PY3
+from bitcoinlib.encoding import (change_base, double_sha256, int_to_varbyteint, to_bytes, to_hexstring,
+                                 varbyteint_to_int)
 from bitcoinlib.networks import Network
-from bitcoinlib.transactions import transaction_deserialize, Transaction
+from bitcoinlib.transactions import Transaction, transaction_deserialize
 
 
 class Block:
@@ -135,7 +138,7 @@ class Block:
         >>> b = srv.getblock(0)
         >>> b.block_hash.hex()
         '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
-        
+
         :param raw: Raw serialize block
         :type raw: bytes
         :param block_hash: Specify block hash if known to verify raw block. Value error will be raised if calculated block hash is different than specified.

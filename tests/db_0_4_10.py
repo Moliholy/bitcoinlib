@@ -17,19 +17,21 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os
+
+from bitcoinlib.config.config import BCL_DATABASE_DIR, DEFAULT_DATABASE
 
 try:
     import enum
 except ImportError:
     import enum34 as enum
-import datetime
+from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, UniqueConstraint, CheckConstraint, String, Boolean, Sequence, ForeignKey, \
     DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-
-from bitcoinlib.main import *
+import logging
 
 _logger = logging.getLogger(__name__)
 _logger.info("Using Database %s" % DEFAULT_DATABASE)

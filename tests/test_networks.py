@@ -6,7 +6,9 @@
 #
 
 import unittest
-from bitcoinlib.networks import *
+
+from bitcoinlib.networks import (Network, NetworkError, network_by_value, network_defined, network_values_for,
+                                 wif_prefix_search)
 
 
 class TestNetworks(unittest.TestCase):

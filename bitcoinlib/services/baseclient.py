@@ -19,12 +19,15 @@
 #
 
 import requests
+
+from bitcoinlib.config.config import BITCOINLIB_VERSION, TIMEOUT_REQUESTS
+
 try:
     from urllib.parse import urlencode
 except ImportError:
     from urllib import urlencode
 import json
-from bitcoinlib.main import *
+import logging
 from bitcoinlib.networks import Network
 from bitcoinlib.keys import Address
 

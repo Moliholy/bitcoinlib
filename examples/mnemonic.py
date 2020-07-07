@@ -6,10 +6,9 @@
 #
 #    © 2017 - 2019 January - 1200 Web Development <http://1200wd.com/>
 #
-
-from bitcoinlib.mnemonic import *
-from bitcoinlib.keys import HDKey
 from bitcoinlib.encoding import to_hexstring
+from bitcoinlib.keys import HDKey
+from bitcoinlib.mnemonic import Mnemonic
 
 #
 # Mnemonic examples

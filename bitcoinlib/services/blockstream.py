@@ -20,10 +20,11 @@
 
 import logging
 from datetime import datetime
-from bitcoinlib.main import MAX_TRANSACTIONS
-from bitcoinlib.services.baseclient import BaseClient, ClientError
-from bitcoinlib.transactions import Transaction
+
+from bitcoinlib.config.config import MAX_TRANSACTIONS
 from bitcoinlib.encoding import to_hexstring
+from bitcoinlib.services.baseclient import BaseClient
+from bitcoinlib.transactions import Transaction
 
 PROVIDERNAME = 'blockstream'
 # Please note: In the Blockstream API, the first couple of Bitcoin blocks are not correctly indexed,

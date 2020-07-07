@@ -20,10 +20,10 @@
 
 import logging
 from datetime import datetime
-from bitcoinlib.main import MAX_TRANSACTIONS
+
+from bitcoinlib.config.config import MAX_TRANSACTIONS
 from bitcoinlib.services.baseclient import BaseClient, ClientError
 from bitcoinlib.transactions import Transaction
-
 
 _logger = logging.getLogger(__name__)
 

@@ -9,7 +9,10 @@
 
 import os
 from pprint import pprint
-from bitcoinlib.wallets import *
+
+from bitcoinlib.config.config import BCL_DATABASE_DIR
+from bitcoinlib.keys import HDKey
+from bitcoinlib.wallets import HDWallet
 
 test_databasefile = os.path.join(BCL_DATABASE_DIR, 'bitcoinlib.test.sqlite')
 test_database = 'sqlite:///' + test_databasefile

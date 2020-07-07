@@ -6,10 +6,11 @@
 #
 #    © 2017 - 2018 November - 1200 Web Development <http://1200wd.com/>
 #
-
+import binascii
 from pprint import pprint
-from bitcoinlib.transactions import *
 
+from bitcoinlib.keys import HDKey, Key
+from bitcoinlib.transactions import Input, Output, Transaction, script_deserialize
 
 #
 # Create transactions

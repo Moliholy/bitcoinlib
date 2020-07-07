@@ -8,8 +8,8 @@
 #
 
 from pprint import pprint
-from bitcoinlib.services.services import *
 
+from bitcoinlib.services.services import Service
 
 # Tests for specific provider
 srv = Service(network='bitcoin', providers=['coinfees'])

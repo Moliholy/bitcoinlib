@@ -17,18 +17,29 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-import hmac
-import random
-import warnings
+import binascii
 import collections
+import hashlib
+import hmac
 import json
+import logging
+import numbers
+import os
+import random
 import struct
+import sys
+import warnings
+from copy import deepcopy
 
-from bitcoinlib.networks import Network, network_by_value, wif_prefix_search
-from bitcoinlib.config.secp256k1 import *
-from bitcoinlib.encoding import *
+from bitcoinlib.config.config import (DEFAULT_NETWORK, DEFAULT_WITNESS_TYPE, ENCODING_BECH32_PREFIXES, PY3,
+                                      SIGHASH_ALL, TYPE_TEXT, WALLET_KEY_STRUCTURES)
+from bitcoinlib.config.secp256k1 import secp256k1_Gx, secp256k1_Gy, secp256k1_a, secp256k1_b, secp256k1_n, secp256k1_p
+from bitcoinlib.encoding import (EncodingError, USE_FASTECDSA, addr_bech32_to_pubkeyhash, addr_to_pubkeyhash,
+                                 bip38_decrypt, bip38_encrypt, change_base, convert_der_sig, der_encode_sig,
+                                 double_sha256, hash160, pubkeyhash_to_addr, to_bytes, to_hexstring, varstr)
+from bitcoinlib.main import deprecated, get_encoding_from_witness, script_type_default
 from bitcoinlib.mnemonic import Mnemonic
+from bitcoinlib.networks import Network, network_by_value, wif_prefix_search
 
 rfc6979_warning_given = False
 if USE_FASTECDSA:
@@ -41,7 +52,6 @@ else:
     import ecdsa
     secp256k1_curve = ecdsa.ellipticcurve.CurveFp(secp256k1_p, secp256k1_a, secp256k1_b)
     secp256k1_generator = ecdsa.ellipticcurve.Point(secp256k1_curve, secp256k1_Gx, secp256k1_Gy, secp256k1_n)
-
 
 _logger = logging.getLogger(__name__)
 
@@ -67,9 +77,9 @@ def check_network_and_key(key, network=None, kf_networks=None, default_network=D
 
     >>> check_network_and_key('L4dTuJf2ceEdWDvCPsLhYf8GiiuYqXtqfbcKdC21BPDvEM1ykJRC')
     'bitcoin'
-    
+
     A BKeyError will be raised if key does not correspond with network or if multiple network are found.
-    
+
     :param key: Key in any format recognized by get_key_format function
     :type key: str, int, bytes, bytearray
     :param network: Optional network. Method raises BKeyError if keys belongs to another network
@@ -78,7 +88,7 @@ def check_network_and_key(key, network=None, kf_networks=None, default_network=D
     :type kf_networks: list
     :param default_network: Specify different default network, leave empty for default (bitcoin)
     :type default_network: str
-    
+
     :return str: Network name
     """
     if not kf_networks:
@@ -105,7 +115,7 @@ def check_network_and_key(key, network=None, kf_networks=None, default_network=D
 def get_key_format(key, is_private=None):
     """
     Determines the type (private or public), format and network key.
-    
+
     This method does not validate if a key is valid.
 
     >>> get_key_format('L4dTuJf2ceEdWDvCPsLhYf8GiiuYqXtqfbcKdC21BPDvEM1ykJRC')
@@ -121,7 +131,7 @@ def get_key_format(key, is_private=None):
     :type key: str, int, bytes, bytearray
     :param is_private: Is key private or not?
     :type is_private: bool
-    
+
     :return dict: Dictionary with format, network and is_private
     """
     if not key:
@@ -1393,7 +1403,7 @@ class HDKey(Key):
 
         :param include_private: Include private key information in dictionary
         :type include_private: bool
-        
+
         :return str:
         """
         return json.dumps(self.as_dict(include_private=include_private), indent=4)
@@ -1918,7 +1928,7 @@ class HDKey(Key):
 class Signature(object):
     """
     Signature class for transactions. Used to create signatures to sign transaction and verification
-    
+
     Sign a transaction hash with a private key and show DER encoded signature:
 
     >>> sk = HDKey('f2620684cef2b677dc2f043be8f0873b61e79b274c7e7feeb434477c082e0dc2')
@@ -1926,21 +1936,21 @@ class Signature(object):
     >>> signature = sign(tx_hash, sk)
     >>> to_hexstring(signature.as_der_encoded())
     '3044022015f9d39d8b53c68c7549d5dc4cbdafe1c71bae3656b93a02d2209e413d9bbcd00220615cf626da0a81945a707f42814cc51ecde499442eb31913a870b9401af6a4ba'
-    
+
     """
 
     @staticmethod
     def from_str(signature, public_key=None):
         """
-        Create a signature from signature string with r and s part. Signature length must be 64 bytes or 128 
-        character hexstring 
-        
+        Create a signature from signature string with r and s part. Signature length must be 64 bytes or 128
+        character hexstring
+
         :param signature: Signature string
         :type signature: bytes, str
         :param public_key: Public key as HDKey or Key object or any other string accepted by HDKey object
         :type public_key: HDKey, Key, str, hexstring, bytes
-        
-        :return Signature: 
+
+        :return Signature:
         """
 
         der_signature = ''
@@ -1983,8 +1993,8 @@ class Signature(object):
         :type use_rfc6979: bool
         :param k: Provide own k. Only use for testing or if you known what you are doing. Providing wrong value for k can result in leaking your private key!
         :type k: int
-        
-        :return Signature: 
+
+        :return Signature:
         """
         if isinstance(tx_hash, bytes):
             tx_hash = to_hexstring(tx_hash)
@@ -2042,7 +2052,7 @@ class Signature(object):
         >>> sig = Signature(r, s)
         >>> sig.hex()
         '48e994862e2cdb372149bad9d9894cf3a5562b4565035943efe0acc502769d351cb88752b5fe8d70d85f3541046df617f8459e991d06a7c0db13b5d4531cd6d4'
-        
+
         :param r: r value of signature
         :type r: int
         :param s: s value of signature
@@ -2105,8 +2115,8 @@ class Signature(object):
     def public_key(self):
         """
         Return public key as HDKey object
-        
-        :return HDKey: 
+
+        :return HDKey:
         """
         return self._public_key
 
@@ -2151,7 +2161,7 @@ class Signature(object):
         :param as_hex: Output as hexstring
         :type as_hex: bool
 
-        :return bytes: 
+        :return bytes:
         """
         if not self._der_encoded:
             self._der_encoded = der_encode_sig(self.r, self.s)
@@ -2176,8 +2186,8 @@ class Signature(object):
         :type tx_hash: bytes, hexstring
         :param public_key: Public key P
         :type public_key: HDKey, Key, str, hexstring, bytes
-                
-        :return bool: 
+
+        :return bool:
         """
         if tx_hash is not None:
             self.tx_hash = to_hexstring(tx_hash)
@@ -2226,7 +2236,7 @@ class Signature(object):
 def sign(tx_hash, private, use_rfc6979=True, k=None):
     """
     Sign transaction hash or message with secret private key. Creates a signature object.
-    
+
     Sign a transaction hash with a private key and show DER encoded signature
 
     >>> sk = HDKey('728afb86a98a0b60cc81faadaa2c12bc17d5da61b8deaf1c08fc07caf424d493')
@@ -2243,8 +2253,8 @@ def sign(tx_hash, private, use_rfc6979=True, k=None):
     :type use_rfc6979: bool
     :param k: Provide own k. Only use for testing or if you known what you are doing. Providing wrong value for k can result in leaking your private key!
     :type k: int
-        
-    :return Signature: 
+
+    :return Signature:
     """
     return Signature.create(tx_hash, private, use_rfc6979, k)
 
@@ -2268,7 +2278,7 @@ def verify(tx_hash, signature, public_key=None):
     :param public_key: Public key P. If not provided it will be derived from provided Signature object or raise an error if not available
     :type public_key: HDKey, Key, str, hexstring, bytes
 
-    :return bool: 
+    :return bool:
     """
     if not isinstance(signature, Signature):
         if not public_key:
@@ -2301,11 +2311,11 @@ def mod_sqrt(a):
 
     Used to calculate y-coordinate if only x-coordinate from public key point is known.
     Formula: y ** 2 == x ** 3 + 7
-    
+
     :param a: Number to calculate square root
     :type a: int
-    
-    :return int: 
+
+    :return int:
     """
 
     # Square root formula: k = (secp256k1_p - 3) // 4

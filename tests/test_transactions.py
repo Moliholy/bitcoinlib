@@ -17,10 +17,19 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import binascii
+import json
+import os
 import unittest
-from bitcoinlib.transactions import *
-from bitcoinlib.keys import HDKey, BKeyError
+
+from bitcoinlib.config.config import SEQUENCE_LOCKTIME_TYPE_FLAG
+from bitcoinlib.encoding import change_base, to_bytearray, to_bytes, to_hexstring, varstr
+from bitcoinlib.keys import Address, BKeyError, HDKey, Key
+from bitcoinlib.transactions import (Input, Output, Transaction, TransactionError, get_unlocking_script_type,
+                                     script_add_locktime_cltv,
+                                     script_add_locktime_csv, script_deserialize,
+                                     script_to_string,
+                                     serialize_multisig_redeemscript)
 from tests.test_custom import CustomAssertions
 
 

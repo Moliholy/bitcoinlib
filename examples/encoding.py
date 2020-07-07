@@ -6,8 +6,9 @@
 #
 #    © 2017 September - 1200 Web Development <http://1200wd.com/>
 #
-
-from bitcoinlib.encoding import *
+from bitcoinlib.encoding import (addr_bech32_to_pubkeyhash, addr_to_pubkeyhash, change_base, convert_der_sig, hash160,
+                                 int_to_varbyteint, normalize_string, normalize_var, pubkeyhash_to_addr,
+                                 pubkeyhash_to_addr_bech32, to_bytes, to_hexstring, varbyteint_to_int)
 
 #
 # Change Base conversion examples

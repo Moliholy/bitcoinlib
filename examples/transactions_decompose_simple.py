@@ -8,8 +8,8 @@
 #
 
 from pprint import pprint
-from bitcoinlib.transactions import *
 
+from bitcoinlib.transactions import Transaction, script_deserialize, script_to_string
 
 print("\n===  Example of a basic raw transaction with 1 input and 2 outputs (destination and change address). ===")
 rt = '01000000'  # Version bytes in Little-Endian (reversed) format

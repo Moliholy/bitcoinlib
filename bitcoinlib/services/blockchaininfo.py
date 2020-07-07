@@ -21,11 +21,11 @@
 import logging
 import struct
 from datetime import datetime
-from bitcoinlib.main import MAX_TRANSACTIONS
+
+from bitcoinlib.config.config import MAX_TRANSACTIONS
+from bitcoinlib.encoding import to_bytes
 from bitcoinlib.services.baseclient import BaseClient
 from bitcoinlib.transactions import Transaction
-from bitcoinlib.encoding import to_bytes
-
 
 PROVIDERNAME = 'blockchaininfo'
 

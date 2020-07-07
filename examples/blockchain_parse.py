@@ -8,10 +8,10 @@
 #    © 2018 October - 1200 Web Development <http://1200wd.com/>
 #
 
-from bitcoinlib.services.services import *
-from bitcoinlib.services.bitcoind import *
 from pprint import pprint
 
+from bitcoinlib.services.bitcoind import BitcoindClient
+from bitcoinlib.services.services import Service
 
 bdc = BitcoindClient()
 

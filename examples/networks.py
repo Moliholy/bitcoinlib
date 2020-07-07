@@ -7,7 +7,7 @@
 #    © 2017 - 2019 February - 1200 Web Development <http://1200wd.com/>
 #
 
-from bitcoinlib.networks import *
+from bitcoinlib.networks import Network, network_by_value, network_values_for, wif_prefix_search
 
 #
 # Network examples

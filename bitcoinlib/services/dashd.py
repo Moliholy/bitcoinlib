@@ -29,8 +29,13 @@
 #   "denominator": 100000000
 # }
 
+import logging
+import os
 import struct
-from bitcoinlib.main import *
+from datetime import datetime
+
+from bitcoinlib.config.config import BCL_DATA_DIR, MAX_TRANSACTIONS
+
 from bitcoinlib.services.authproxy import AuthServiceProxy
 from bitcoinlib.services.baseclient import BaseClient
 from bitcoinlib.transactions import Transaction

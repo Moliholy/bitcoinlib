@@ -17,12 +17,17 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import binascii
 import unittest
 
+from bitcoinlib.config.config import PY3
+
 from bitcoinlib.config.opcodes import opcode
-from bitcoinlib.encoding import *
-from bitcoinlib.encoding import _bech32_polymod, _codestring_to_array
+from bitcoinlib.encoding import (EncodingError, _bech32_polymod, _codestring_to_array, addr_bech32_to_pubkeyhash,
+                                 addr_to_pubkeyhash, change_base, convert_der_sig, der_encode_sig, int_to_varbyteint,
+                                 normalize_string, pubkeyhash_to_addr, pubkeyhash_to_addr_bech32, to_bytes,
+                                 to_hexstring, varbyteint_to_int,
+                                 varstr)
 
 
 class TestEncodingMethodsChangeBase(unittest.TestCase):

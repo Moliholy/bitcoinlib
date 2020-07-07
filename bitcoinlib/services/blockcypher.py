@@ -20,13 +20,15 @@
 
 import logging
 from datetime import datetime
+
 # Not supported in PY2, remove in PY3
+from bitcoinlib.config.config import MAX_TRANSACTIONS
+
 try:
     from datetime import timezone
 except Exception:
     pass
 
-from bitcoinlib.main import MAX_TRANSACTIONS
 from bitcoinlib.services.baseclient import BaseClient, ClientError
 from bitcoinlib.transactions import Transaction
 from bitcoinlib.encoding import to_hexstring, to_bytes

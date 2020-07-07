@@ -19,11 +19,10 @@
 # If you deposit at least 0.001 TBTC test bitcoins to the first wallet, several transactions will be created for every
 # kind of segwit wallet
 #
-
-from bitcoinlib.wallets import *
-from bitcoinlib.keys import HDKey
 from time import sleep
 
+from bitcoinlib.keys import HDKey
+from bitcoinlib.wallets import wallet_create_or_open
 
 tx_fee = 500
 tx_amount = 1000

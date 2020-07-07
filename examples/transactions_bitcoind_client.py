@@ -8,8 +8,9 @@
 #
 
 from pprint import pprint
-from bitcoinlib.transactions import *
+
 from bitcoinlib.services.bitcoind import BitcoindClient
+from bitcoinlib.transactions import Transaction, TransactionError
 
 # Provide a connection URL to your bitcoind instance, or leave empty to search service on localhost
 # Connection URL Example:

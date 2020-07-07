@@ -18,9 +18,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from datetime import datetime
 import logging
-from bitcoinlib.main import MAX_TRANSACTIONS
+from datetime import datetime
+
+from bitcoinlib.config.config import MAX_TRANSACTIONS
 from bitcoinlib.services.baseclient import BaseClient
 from bitcoinlib.transactions import Transaction
 

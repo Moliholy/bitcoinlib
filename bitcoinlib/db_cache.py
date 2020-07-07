@@ -17,6 +17,9 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from datetime import datetime
+
+from bitcoinlib.config.config import ALLOW_DATABASE_THREADS, DEFAULT_DATABASE_CACHE
 
 try:
     import enum
@@ -30,7 +33,8 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-from bitcoinlib.main import *
+import logging
+
 
 _logger = logging.getLogger(__name__)
 _logger.info("Using Cache Database %s" % DEFAULT_DATABASE_CACHE)

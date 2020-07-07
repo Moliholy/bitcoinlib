@@ -20,11 +20,12 @@
 
 import logging
 from datetime import datetime
-from bitcoinlib.main import MAX_TRANSACTIONS
+
+from bitcoinlib.config.config import MAX_TRANSACTIONS
+from bitcoinlib.encoding import to_bytes, to_hexstring, varstr
+from bitcoinlib.keys import Address
 from bitcoinlib.services.baseclient import BaseClient
 from bitcoinlib.transactions import Transaction
-from bitcoinlib.encoding import varstr, to_bytes, to_hexstring
-from bitcoinlib.keys import Address
 
 _logger = logging.getLogger(__name__)
 

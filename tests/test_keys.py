@@ -17,13 +17,20 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import hashlib
+import json
 import os
 import unittest
-import json
 
-from bitcoinlib.networks import NETWORK_DEFINITIONS
-from bitcoinlib.keys import *
+from fastecdsa.util import RFC6979
+
+from bitcoinlib.config.config import PY3
+from bitcoinlib.config.secp256k1 import secp256k1_n
+from bitcoinlib.encoding import EncodingError, USE_FASTECDSA, USING_MODULE_SCRYPT, to_bytes, to_hexstring
+from bitcoinlib.keys import (Address, BKeyError, HDKey, Key, Signature, addr_convert, deserialize_address,
+                             get_key_format,
+                             path_expand, sign)
+from bitcoinlib.networks import NETWORK_DEFINITIONS, wif_prefix_search
 
 # Number of bulktests for generation of private, public keys and HDKeys. Set to 0 to disable
 # WARNING: Can be slow for a larger number of tests
@@ -43,7 +50,7 @@ class TestKeyClasses(unittest.TestCase):
         pubk2 = HDKey(k.wif_public())
         self.assertEqual(str(pubk2), '03dc86716b2be27a0575558bac73279290ac22c3ea0240e42a2152d584f2b4006b')
         self.assertTrue(k.public() == pubk2)
-        
+
     def test_dict_and_json_outputs(self):
         k = HDKey()
         k.address(script_type='p2wsh', encoding='bech32')

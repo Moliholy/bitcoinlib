@@ -18,16 +18,21 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os
+import binascii
+import hashlib
+import logging
 import math
 import numbers
-from copy import deepcopy
-import hashlib
-import pyaes
-import binascii
-import unicodedata
+import os
 import struct
-from bitcoinlib.main import *
+import sys
+import unicodedata
+from copy import deepcopy
+
+import pyaes
+
+from bitcoinlib.config.config import PY3, TYPE_TEXT
+
 _logger = logging.getLogger(__name__)
 
 

@@ -17,13 +17,24 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-from datetime import datetime
+import hashlib
 import json
+import logging
+import math
+import numbers
+import struct
+import sys
+from datetime import datetime
 
-from bitcoinlib.encoding import *
-from bitcoinlib.config.opcodes import *
-from bitcoinlib.keys import HDKey, Key, deserialize_address, Address, sign, verify, Signature
+from bitcoinlib.config.config import (DEFAULT_NETWORK, SCRIPT_TYPES_LOCKING, SCRIPT_TYPES_UNLOCKING,
+                                      SEQUENCE_LOCKTIME_DISABLE_FLAG, SEQUENCE_LOCKTIME_TYPE_FLAG,
+                                      SEQUENCE_REPLACE_BY_FEE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, SIGHASH_NONE,
+                                      SIGHASH_SINGLE)
+from bitcoinlib.config.opcodes import OP_N_CODES, opcode, opcodenames, opcodes
+from bitcoinlib.encoding import (change_base, double_sha256, hash160, int_to_varbyteint, to_bytes, to_hexstring,
+                                 varbyteint_to_int, varstr)
+from bitcoinlib.keys import Address, HDKey, Key, Signature, deserialize_address, sign, verify
+from bitcoinlib.main import script_type_default
 from bitcoinlib.networks import Network
 
 _logger = logging.getLogger(__name__)
@@ -45,11 +56,11 @@ class TransactionError(Exception):
 def transaction_deserialize(rawtx, network=DEFAULT_NETWORK, check_size=True):
     """
     Deserialize a raw transaction
-    
+
     Returns a dictionary with list of input and output objects, locktime and version.
-    
+
     Will raise an error if wrong number of inputs are found or if there are no output found.
-    
+
     :param rawtx: Raw transaction as String, Byte or Bytearray
     :type rawtx: str, bytes, bytearray
     :param network: Network code, i.e. 'bitcoin', 'testnet', 'litecoin', etc. Leave emtpy for default network
@@ -180,7 +191,7 @@ def transaction_deserialize(rawtx, network=DEFAULT_NETWORK, check_size=True):
 def script_deserialize(script, script_types=None, locking_script=None, size_bytes_check=True):
     """
     Deserialize a script: determine type, number of signatures and script data.
-    
+
     :param script: Raw script
     :type script: str, bytes, bytearray
     :param script_types: Limit script type determination to this list. Leave to default None to search in all script types.
@@ -190,7 +201,7 @@ def script_deserialize(script, script_types=None, locking_script=None, size_byte
     :param size_bytes_check: Check if script or signature starts with size bytes and remove size bytes before parsing. Default is True
     :type size_bytes_check: bool
 
-    :return list: With this items: [script_type, data, number_of_sigs_n, number_of_sigs_m] 
+    :return list: With this items: [script_type, data, number_of_sigs_n, number_of_sigs_m]
     """
 
     def _parse_data(scr, max_items=None, redeemscript_expected=False, item_length=0):
@@ -414,7 +425,7 @@ def script_deserialize(script, script_types=None, locking_script=None, size_byte
 def script_to_string(script, name_data=False):
     """
     Convert script to human readable string format with OP-codes, signatures, keys, etc
-    
+
     >>> script = '76a914c7402ab295a0eb8897ff5b8fbd5276c2d9d2340b88ac'
     >>> script_to_string(script)
     'OP_DUP OP_HASH160 hash-20 OP_EQUALVERIFY OP_CHECKSIG'
@@ -424,7 +435,7 @@ def script_to_string(script, name_data=False):
     :param name_data: Replace signatures and keys strings with name
     :type name_data: bool
 
-    :return str: 
+    :return str:
     """
 
     script = to_bytes(script)
@@ -641,10 +652,10 @@ def transaction_update_spents(txs, address):
 class Input(object):
     """
     Transaction Input class, used by Transaction class
-    
+
     An Input contains a reference to an UTXO or Unspent Transaction Output (prev_hash + output_n).
     To spent the UTXO an unlocking script can be included to prove ownership.
-    
+
     Inputs are verified by the Transaction class.
     """
 
@@ -655,7 +666,7 @@ class Input(object):
                  witnesses=None, encoding=None, network=DEFAULT_NETWORK):
         """
         Create a new transaction input
-        
+
         :param prev_hash: Transaction hash of the UTXO (previous output) which will be spent.
         :type prev_hash: bytes, hexstring
         :param output_n: Output number in previous transaction.
@@ -964,7 +975,7 @@ class Input(object):
     def as_dict(self):
         """
         Get transaction input information in json format
-        
+
         :return dict: Json with output_n, prev_hash, output_n, type, address, public_key, public_hash, unlocking_script and sequence
         """
 
@@ -1008,7 +1019,7 @@ class Input(object):
 class Output(object):
     """
     Transaction Output class, normally part of Transaction class.
-    
+
     Contains the amount and destination of a transaction.
     """
 
@@ -1017,14 +1028,14 @@ class Output(object):
                  network=DEFAULT_NETWORK):
         """
         Create a new transaction output
-        
+
         An transaction outputs locks the specified amount to a public key. Anyone with the private key can unlock
         this output.
-        
-        The transaction output class contains an amount and the destination which can be provided either as address, 
-        public key, public key hash or a locking script. Only one needs to be provided as the they all can be derived 
+
+        The transaction output class contains an amount and the destination which can be provided either as address,
+        public key, public key hash or a locking script. Only one needs to be provided as the they all can be derived
         from each other, but you can provide as much attributes as you know to improve speed.
-        
+
         :param value: Amount of output in smallest denominator of currency, for example satoshi's for bitcoins
         :type value: int
         :param address: Destination address of output. Leave empty to derive from other attributes you provide. An instance of an Address or HDKey class is allowed as argument.
@@ -1181,15 +1192,15 @@ class Output(object):
 class Transaction(object):
     """
     Transaction Class
-    
+
     Contains 1 or more Input class object with UTXO's to spent and 1 or more Output class objects with destinations.
     Besides the transaction class contains a locktime and version.
-    
+
     Inputs and outputs can be included when creating the transaction, or can be add later with add_input and
     add_output respectively.
-    
-    A verify method is available to check if the transaction Inputs have valid unlocking scripts. 
-    
+
+    A verify method is available to check if the transaction Inputs have valid unlocking scripts.
+
     Each input in the transaction can be signed with the sign method provided a valid private key.
     """
 
@@ -1197,10 +1208,10 @@ class Transaction(object):
     def import_raw(rawtx, network=DEFAULT_NETWORK, check_size=True):
         """
         Import a raw transaction and create a Transaction object
-        
+
         Uses the transaction_deserialize method to parse the raw transaction and then calls the init method of
         this transaction class to create the transaction object
-        
+
         :param rawtx: Raw transaction string
         :type rawtx: bytes, str
         :param network: Network, leave empty for   default
@@ -1219,20 +1230,20 @@ class Transaction(object):
                  block_height=None, block_hash=None, input_total=0, output_total=0, rawtx='', status='new',
                  coinbase=False, verified=False, witness_type='legacy', flag=None):
         """
-        Create a new transaction class with provided inputs and outputs. 
-        
+        Create a new transaction class with provided inputs and outputs.
+
         You can also create a empty transaction and add input and outputs later.
-        
-        To verify and sign transactions all inputs and outputs need to be included in transaction. Any modification 
+
+        To verify and sign transactions all inputs and outputs need to be included in transaction. Any modification
         after signing makes the transaction invalid.
-        
+
         :param inputs: Array of Input objects. Leave empty to add later
         :type inputs: list (Input)
         :param outputs: Array of Output object. Leave empty to add later
         :type outputs: list (Output)
         :param locktime: Transaction level locktime. Locks the transaction until a specified block (value from 1 to 5 million) or until a certain time (Timestamp in seconds after 1-jan-1970). Default value is 0 for transactions without locktime
         :type locktime: int
-        :param version: Version rules. Defaults to 1 in bytes 
+        :param version: Version rules. Defaults to 1 in bytes
         :type version: bytes, int
         :param network: Network, leave empty for default network
         :type network: str, Network
@@ -1348,8 +1359,8 @@ class Transaction(object):
     def as_dict(self):
         """
         Return Json dictionary with transaction information: Inputs, outputs, version and locktime
-        
-        :return dict: 
+
+        :return dict:
         """
 
         inputs = []
@@ -1558,9 +1569,9 @@ class Transaction(object):
     def raw(self, sign_id=None, hash_type=SIGHASH_ALL, witness_type=None):
         """
         Serialize raw transaction
-        
+
         Return transaction with signed inputs if signatures are available
-        
+
         :param sign_id: Create raw transaction which can be signed by transaction with this input ID
         :type sign_id: int, None
         :param hash_type: Specific hash type, default is SIGHASH_ALL
@@ -1624,7 +1635,7 @@ class Transaction(object):
         :param witness_type: Serialize transaction with other witness type then default. Use to create legacy raw transaction for segwit transaction to create transaction signature ID's
         :type witness_type: str
 
-        :return hexstring: 
+        :return hexstring:
         """
 
         return to_hexstring(self.raw(sign_id, hash_type=hash_type, witness_type=witness_type))
@@ -1632,9 +1643,9 @@ class Transaction(object):
     def verify(self):
         """
         Verify all inputs of a transaction, check if signatures match public key.
-        
+
         Does not check if UTXO is valid or has already been spent
-        
+
         :return bool: True if enough signatures provided and if all signatures are valid
         """
 
@@ -1678,7 +1689,7 @@ class Transaction(object):
     def sign(self, keys=None, tid=None, multisig_key_n=None, hash_type=SIGHASH_ALL, _fail_on_unknown_key=True):
         """
         Sign the transaction input with provided private key
-        
+
         :param keys: A private key or list of private keys
         :type keys: HDKey, Key, bytes, list
         :param tid: Index of transaction input
@@ -1771,7 +1782,7 @@ class Transaction(object):
                   key_path='', witness_type=None, encoding=None):
         """
         Add input to this transaction
-        
+
         Wrapper for append method of Input class.
 
         :param prev_hash: Transaction hash of the UTXO (previous output) which will be spent.
@@ -1840,9 +1851,9 @@ class Transaction(object):
                    output_n=None, encoding=None, spending_txid=None, spending_index_n=None):
         """
         Add an output to this transaction
-        
+
         Wrapper for the append method of the Output class.
-        
+
         :param value: Value of output in smallest denominator of currency, for example satoshi's for bitcoins
         :type value: int
         :param address: Destination address of output. Leave empty to derive from other attributes you provide.
